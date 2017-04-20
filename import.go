@@ -5,10 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"strings"
-
 	"github.com/kiesel/golaid/dialog"
-	"github.com/wulijun/go-php-serialize/phpserialize"
+	"github.com/yvasiyarov/php_session_decoder/php_serialize"
 )
 
 var pathPrefix = "data"
@@ -18,7 +16,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(pages)
 
 	entries, err := importEntries(pages)
 	if err != nil {
@@ -30,7 +27,7 @@ func main() {
 
 func importIndex() ([]dialog.Page, error) {
 	fmt.Println("Importing indices:")
-	pages := make([]dialog.Page, 1)
+	pages := make([]dialog.Page, 0)
 	end := false
 
 	for i := 0; !end; i++ {
@@ -48,7 +45,8 @@ func importIndex() ([]dialog.Page, error) {
 			return nil, err
 		}
 
-		page, err := dialog.NewPage(data.(map[interface{}]interface{}))
+		array := data.(php_serialize.PhpArray)
+		page, err := dialog.NewPage(array)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +56,7 @@ func importIndex() ([]dialog.Page, error) {
 	return pages, nil
 }
 
-func importFile(fname string) (interface{}, error) {
+func importFile(fname string) (php_serialize.PhpValue, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -70,31 +68,35 @@ func importFile(fname string) (interface{}, error) {
 		return nil, err
 	}
 
-	return phpserialize.Decode(string(buf))
+	return php_serialize.UnSerialize(string(buf))
 }
 
-func importEntries(pages []dialog.Page) ([]interface{}, error) {
-	entries := make([]interface{}, 1)
+func importEntries(pages []dialog.Page) ([]php_serialize.PhpValue, error) {
+	entries := make([]php_serialize.PhpValue, 1)
 
 	for _, page := range pages {
-		for ref := range page.Entries {
-			fmt.Println(ref)
-		}
-		// entry, err := importEntry(key)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		for _, ref := range page.Entries {
+			entry, err := importEntry(ref)
+			if err != nil {
+				return nil, err
+			}
 
-		// entries = append(entries, entry)
+			entries = append(entries, entry)
+		}
 	}
 
 	return entries, nil
 }
 
-func importEntry(key string) (interface{}, error) {
-	parts := strings.SplitN(key, "-", 2)
-	fname := fmt.Sprintf("%s/%s", pathPrefix, parts[1])
-
+func importEntry(er dialog.EntryRef) (php_serialize.PhpValue, error) {
+	fname := fmt.Sprintf("%s/%s", pathPrefix, er.Filename)
 	fmt.Printf("Importing entry '%s'\n", fname)
-	return importFile(fname)
+
+	data, err := importFile(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	ptr := data.(*php_serialize.PhpObject)
+	return dialog.NewEntry(ptr)
 }
