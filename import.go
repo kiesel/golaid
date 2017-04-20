@@ -7,19 +7,20 @@ import (
 
 	"strings"
 
+	"github.com/kiesel/golaid/dialog"
 	"github.com/wulijun/go-php-serialize/phpserialize"
 )
 
 var pathPrefix = "data"
 
 func main() {
-	index, err := importIndex()
+	pages, err := importIndex()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(index)
+	fmt.Println(pages)
 
-	entries, err := importEntries(index)
+	entries, err := importEntries(pages)
 	if err != nil {
 		panic(err)
 	}
@@ -27,9 +28,9 @@ func main() {
 	fmt.Println(entries)
 }
 
-func importIndex() (map[string]string, error) {
+func importIndex() ([]dialog.Page, error) {
 	fmt.Println("Importing indices:")
-	index := make(map[string]string)
+	pages := make([]dialog.Page, 1)
 	end := false
 
 	for i := 0; !end; i++ {
@@ -47,16 +48,14 @@ func importIndex() (map[string]string, error) {
 			return nil, err
 		}
 
-		for key, val := range data.(map[interface{}]interface{}) {
-			if key == "entries" {
-				for idx, name := range val.(map[interface{}]interface{}) {
-					index[idx.(string)] = name.(string)
-				}
-			}
+		page, err := dialog.NewPage(data.(map[interface{}]interface{}))
+		if err != nil {
+			return nil, err
 		}
+		pages = append(pages, page)
 	}
 
-	return index, nil
+	return pages, nil
 }
 
 func importFile(fname string) (interface{}, error) {
@@ -74,16 +73,19 @@ func importFile(fname string) (interface{}, error) {
 	return phpserialize.Decode(string(buf))
 }
 
-func importEntries(index map[string]string) ([]interface{}, error) {
-	entries := make([]interface{}, len(index))
+func importEntries(pages []dialog.Page) ([]interface{}, error) {
+	entries := make([]interface{}, 1)
 
-	for key := range index {
-		entry, err := importEntry(key)
-		if err != nil {
-			return nil, err
+	for _, page := range pages {
+		for ref := range page.Entries {
+			fmt.Println(ref)
 		}
+		// entry, err := importEntry(key)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		entries = append(entries, entry)
+		// entries = append(entries, entry)
 	}
 
 	return entries, nil
@@ -94,16 +96,5 @@ func importEntry(key string) (interface{}, error) {
 	fname := fmt.Sprintf("%s/%s", pathPrefix, parts[1])
 
 	fmt.Printf("Importing entry '%s'\n", fname)
-
-	f, err := os.Open(fname)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	buf, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-	return phpserialize.Decode(string(buf))
+	return importFile(fname)
 }
