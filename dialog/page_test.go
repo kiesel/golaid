@@ -3,6 +3,7 @@ package dialog
 import "testing"
 import "reflect"
 import "github.com/yvasiyarov/php_session_decoder/php_serialize"
+import "github.com/davecgh/go-spew/spew"
 
 func Test_NewPage(t *testing.T) {
 	p, err := NewPage(php_serialize.PhpArray{
@@ -28,6 +29,6 @@ func Test_NewPage(t *testing.T) {
 
 func assertDeepEqual(expect, given interface{}, t *testing.T) {
 	if !reflect.DeepEqual(expect, given) {
-		t.Errorf("Expected [%s] did not match given [%s].", expect, given)
+		t.Errorf("Actual does not match expected.\n%s\n\n%s\n", spew.Sdump(expect), spew.Sdump(given))
 	}
 }

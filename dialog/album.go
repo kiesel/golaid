@@ -9,8 +9,8 @@ import (
 // Album represents Dialog Album
 type Album struct {
 	*Entry
-	Highlights interface{}
-	Chapters   interface{}
+	Highlights []Image
+	Chapters   []Chapter
 }
 
 func newAlbum(in *php_serialize.PhpObject) (*Album, error) {

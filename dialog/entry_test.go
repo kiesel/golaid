@@ -29,7 +29,7 @@ func Test_NewEntry_Album(t *testing.T) {
 			Description: "This is the full whole description. With <html/>.",
 			CreatedAt:   time.Unix(0, 0),
 		},
-		Highlights: nil,
-		Chapters:   nil,
+		Highlights: []Image{},
+		Chapters:   []Chapter{},
 	}, entry, t)
 }

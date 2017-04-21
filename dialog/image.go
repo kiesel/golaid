@@ -15,9 +15,9 @@ type Image struct {
 	IptcData IptcData
 }
 
-func newImage(in *php_serialize.PhpObject) (*Image, error) {
+func newImage(in *php_serialize.PhpObject) (Image, error) {
 	fmt.Println(in)
-	return &Image{
+	return Image{
 		Name:   getFieldString(in, "name"),
 		Width:  getFieldInt64(in, "width"),
 		Height: getFieldInt64(in, "height"),
@@ -39,7 +39,7 @@ func newHighlights(in *php_serialize.PhpArray) ([]Image, error) {
 			return nil, err
 		}
 
-		out = append(out, *image)
+		out = append(out, image)
 	}
 
 	return out, nil
