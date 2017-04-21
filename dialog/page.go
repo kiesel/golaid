@@ -36,10 +36,6 @@ func NewPage(in php_serialize.PhpArray) (Page, error) {
 	}, nil
 }
 
-func (p *Page) String() string {
-	return "<Page>"
-}
-
 // NewEntryRef creates a new EntryRef instance
 func NewEntryRef(key, name string) EntryRef {
 	parts := strings.SplitN(key, "-", 2)

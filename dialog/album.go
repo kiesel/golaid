@@ -14,12 +14,12 @@ type Album struct {
 }
 
 func newAlbum(in *php_serialize.PhpObject) (*Album, error) {
-	highlights, err := newHighlights(phpArrayFrom(in.GetPublic("highlights")))
+	highlights, err := newImages(phpArrayFrom(in.GetPublic("highlights")))
 	if err != nil {
 		return nil, err
 	}
 
-	chapters, err := newChapter(phpArrayFrom(in.GetPublic("chapters")))
+	chapters, err := newChapters(phpArrayFrom(in.GetPublic("chapters")))
 	if err != nil {
 		return nil, err
 	}

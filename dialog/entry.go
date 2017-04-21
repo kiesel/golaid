@@ -71,3 +71,11 @@ func getFieldInt64(p *php_serialize.PhpObject, field string) int64 {
 
 	return php_serialize.PhpValueInt64(val)
 }
+
+func orNil(in interface{}, ok bool) interface{} {
+	if !ok {
+		return nil
+	}
+
+	return in
+}

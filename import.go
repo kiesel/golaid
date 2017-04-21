@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/kiesel/golaid/dialog"
 	"github.com/yvasiyarov/php_session_decoder/php_serialize"
 )
@@ -12,6 +13,10 @@ import (
 var pathPrefix = "data"
 
 func main() {
+	spew.Config = spew.ConfigState{
+		MaxDepth: 3,
+		Indent:   "  ",
+	}
 	pages, err := importIndex()
 	if err != nil {
 		panic(err)
