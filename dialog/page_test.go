@@ -2,13 +2,14 @@ package dialog
 
 import "testing"
 import "reflect"
+import "github.com/yvasiyarov/php_session_decoder/php_serialize"
 
 func Test_NewPage(t *testing.T) {
-	p, err := NewPage(map[interface{}]interface{}{
-		"total":   int64(15),
-		"perpage": int64(5),
-		"entries": map[interface{}]interface{}{
-			"201504171010-filename.dat": "filename",
+	p, err := NewPage(php_serialize.PhpArray{
+		php_serialize.PhpValue("total"):   php_serialize.PhpValue(int64(15)),
+		php_serialize.PhpValue("perpage"): php_serialize.PhpValue(int64(5)),
+		php_serialize.PhpValue("entries"): php_serialize.PhpArray{
+			php_serialize.PhpValue("201504171010-filename.dat"): php_serialize.PhpValue("filename"),
 		},
 	})
 
