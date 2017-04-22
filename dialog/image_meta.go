@@ -17,7 +17,13 @@ type ExifData struct {
 	Flash           int       `php:"flash"`
 	Orientation     int       `php:"orientation"`
 	FileSize        int       `php:"fileSize"`
-	DateTime        time.Time `php:"dateTime" factory:"foo"`
+	DateTime        time.Time `php:"dateTime"`
+	Model           string    `php:"model"`
+	MimeType        string    `php:"mimeType"`
+	WhiteBalance    int       `php:"whiteBalance"`
+	FocalLength     int       `php:"focalLength"`
+	Make            string    `php:"make"`
+	ExposureProgram int       `php:"exposureProgram"`
 }
 
 // IptcData represents iptc data
@@ -47,9 +53,25 @@ func newExifData(in *php_serialize.PhpObject) (ExifData, error) {
 				continue
 			}
 
+			if value == nil {
+				fmt.Println("Skipping setting nil value")
+				continue
+			}
+
 			assignTo := ptrOut.Elem().FieldByName(field.Name)
 
 			switch field.Type.Kind() {
+			case reflect.TypeOf(time.Time{}).Kind():
+				dateString, ok := value.(*php_serialize.PhpObject).GetPublic("value")
+				if !ok {
+					fmt.Println("Could not get date")
+					break
+				}
+				time, err := time.Parse(PhpDateStringFormat, dateString.(string))
+				if err != nil {
+					fmt.Printf("Could not parse date: %v\n", err)
+				}
+				assignTo.Set(reflect.ValueOf(time))
 			case reflect.Int:
 			case reflect.Int64:
 				assignTo.SetInt(php_serialize.PhpValueInt64(value))
@@ -63,5 +85,6 @@ func newExifData(in *php_serialize.PhpObject) (ExifData, error) {
 		}
 	}
 
+	// spew.Dump(out)
 	return out, nil
 }

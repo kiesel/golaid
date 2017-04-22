@@ -7,6 +7,11 @@ import (
 	"github.com/yvasiyarov/php_session_decoder/php_serialize"
 )
 
+const (
+	// PhpDateStringFormat is the default date parsing format for XP Framework date objects
+	PhpDateStringFormat = "2006-01-02 15:04:05-0700"
+)
+
 // Entry represents a base entry
 type Entry struct {
 	Name        string
