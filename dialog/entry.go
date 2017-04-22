@@ -12,6 +12,8 @@ const (
 	PhpDateStringFormat = "2006-01-02 15:04:05-0700"
 )
 
+type Any interface{}
+
 // Entry represents a base entry
 type Entry struct {
 	Name        string

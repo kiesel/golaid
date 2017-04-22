@@ -8,9 +8,9 @@ import (
 
 // Image represents Dialog Image
 type Image struct {
-	Name     string
-	Width    int64
-	Height   int64
+	Name     string `php:"name"`
+	Width    int64  `php:"width"`
+	Height   int64  `php:"height"`
 	ExifData ExifData
 	IptcData IptcData
 }
@@ -43,12 +43,12 @@ func newImages(in *php_serialize.PhpArray) ([]Image, error) {
 			continue
 		}
 
-		image, err := newImage(item.(*php_serialize.PhpObject))
+		image, err := reflectiveNewObject(Image{}, item.(*php_serialize.PhpObject))
 		if err != nil {
 			return nil, err
 		}
 
-		out = append(out, image)
+		out = append(out, image.(Image))
 	}
 
 	return out, nil

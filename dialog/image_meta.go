@@ -31,17 +31,25 @@ type IptcData struct {
 }
 
 func newExifData(in *php_serialize.PhpObject) (ExifData, error) {
-	// spew.Dump(in)
+	out, err := reflectiveNewObject(&ExifData{}, in)
+	if err != nil {
+		return ExifData{}, err
+	}
 
-	// Create outbound struct
-	out := ExifData{}
+	return out.(ExifData), nil
+}
 
-	// Acquire reflection value to pointer to struct ...
-	ptrOut := reflect.ValueOf(&out)
+func reflectiveNewObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, error) {
 
-	// ... and then to the struct itself.
+	// orig contains the struct to be filled; but it is a value, not a pointer, so we cannot change it
+	// through reflection. Instead, create a copy
 
-	t := reflect.TypeOf(out)
+	// Create copy, assign pointer to reflection object to out
+	out := reflect.New(reflect.TypeOf(orig))
+
+	// Fetch the fields of the original struct:
+	t := reflect.TypeOf(orig)
+
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if phpFieldName, ok := field.Tag.Lookup("php"); ok {
@@ -58,7 +66,11 @@ func newExifData(in *php_serialize.PhpObject) (ExifData, error) {
 				continue
 			}
 
-			assignTo := ptrOut.Elem().FieldByName(field.Name)
+			// Fetch the reflection object to assign the new value to; .Elem() is the
+			// equivalent of dereferencing the pointer
+			// This value must be addressable and setable (which it is, because we obtained
+			// it through a pointer)
+			assignTo := out.Elem().FieldByIndex(field.Index)
 
 			switch field.Type.Kind() {
 			case reflect.TypeOf(time.Time{}).Kind():
@@ -85,6 +97,8 @@ func newExifData(in *php_serialize.PhpObject) (ExifData, error) {
 		}
 	}
 
-	// spew.Dump(out)
-	return out, nil
+	// Return the actual copied value to the caller
+	// Elem() dereferences the reflection pointer, Interface() then retrieves
+	// the actual interface value
+	return out.Elem().Interface(), nil
 }
