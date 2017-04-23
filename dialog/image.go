@@ -43,7 +43,7 @@ func newImages(in *php_serialize.PhpArray) ([]Image, error) {
 			continue
 		}
 
-		image, err := reflectiveNewObject(Image{}, item.(*php_serialize.PhpObject))
+		image, err := newObject(Image{}, item.(*php_serialize.PhpObject))
 		if err != nil {
 			return nil, err
 		}
