@@ -8,7 +8,7 @@ import (
 
 // Album represents Dialog Album
 type Album struct {
-	*Entry
+	*Entry     `recurse:"true"`
 	Highlights []Image
 	Chapters   []Chapter
 }

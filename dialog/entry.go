@@ -14,14 +14,12 @@ const (
 	PhpDateStringFormat = "2006-01-02 15:04:05-0700"
 )
 
-type Any interface{}
-
 // Entry represents a base entry
 type Entry struct {
-	Name        string
-	Title       string
-	Description string
-	CreatedAt   time.Time
+	Name        string    `php:"name"`
+	Title       string    `php:"title"`
+	Description string    `php:"name"`
+	CreatedAt   time.Time `php:"created_at"`
 }
 
 // IEntry is the entries interface
@@ -41,7 +39,9 @@ func (e *Entry) GetName() string {
 func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 	switch in.GetClassName() {
 	case "Album", "de.thekid.dialog.Album":
-		return newAlbum(in)
+		_, _ = newObject(Album{}, in)
+		return nil, nil
+		// return newAlbum(in)
 
 	case "EntryCollection", "de.thekid.dialog.EntryCollection":
 		return newEntryCollection(in)
@@ -55,6 +55,8 @@ func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 }
 
 func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, error) {
+	// fmt.Printf("Entering with %T \n", orig)
+	// defer fmt.Println("Leaving newObject")
 
 	// orig contains the struct to be filled; but it is a value, not a pointer, so we cannot change it
 	// through reflection. Instead, create a copy
@@ -67,6 +69,43 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+		// fmt.Printf("Inspecting type %v\n", field)
+
+		if field.Anonymous {
+			if field.Type == reflect.TypeOf(&Entry{}) {
+
+				// Create new object; static type is interface{}
+				entry, err := newObject(Entry{}, in)
+				if err != nil {
+					return nil, err
+				}
+
+				// Type assertion to convert static type to dialog.Entry
+				pentry := entry.(Entry)
+
+				// Assign value to ptr to entry to the field
+				out.Elem().FieldByIndex(field.Index).Set(reflect.ValueOf(&pentry))
+				continue
+			}
+		}
+		// if _, ok := field.Tag.Lookup("recurse"); ok {
+
+		// 	// Create a new instance of orig's underlying type
+		// 	// spew.Dump(field.Type)
+		// 	entry := reflect.New(reflect.TypeOf(orig))
+		// 	// spew.Dump(entry.Elem().Interface())
+
+		// 	entryRef, err := newObject(entry.Elem(), in)
+		// 	// spew.Dump(entryRef)
+
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+
+		// 	// out.Elem().FieldByIndex(field.Index).Set(reflect.ValueOf(entryRef))
+		// 	continue
+		// }
+
 		if phpFieldName, ok := field.Tag.Lookup("php"); ok {
 
 			// Acquire value from PHP object
