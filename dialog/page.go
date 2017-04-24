@@ -1,7 +1,6 @@
 package dialog
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/yvasiyarov/php_session_decoder/php_serialize"
@@ -39,7 +38,6 @@ func NewPage(in php_serialize.PhpArray) (Page, error) {
 // NewEntryRef creates a new EntryRef instance
 func NewEntryRef(key, name string) EntryRef {
 	parts := strings.SplitN(key, "-", 2)
-	fmt.Println(parts)
 	return EntryRef{
 		Utime:    parts[0],
 		Filename: parts[1],

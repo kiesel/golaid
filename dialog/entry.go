@@ -18,8 +18,8 @@ const (
 type Entry struct {
 	Name        string    `php:"name"`
 	Title       string    `php:"title"`
-	Description string    `php:"name"`
-	CreatedAt   time.Time `php:"created_at"`
+	Description string    `php:"description"`
+	CreatedAt   time.Time `php:"createdAt"`
 }
 
 // IEntry is the entries interface

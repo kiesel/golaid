@@ -2,33 +2,41 @@ package dialog
 
 import "testing"
 import "reflect"
-import "github.com/yvasiyarov/php_session_decoder/php_serialize"
-import "github.com/davecgh/go-spew/spew"
 
-func Test_NewPage(t *testing.T) {
-	p, err := NewPage(php_serialize.PhpArray{
-		php_serialize.PhpValue("total"):   php_serialize.PhpValue(int64(15)),
-		php_serialize.PhpValue("perpage"): php_serialize.PhpValue(int64(5)),
-		php_serialize.PhpValue("entries"): php_serialize.PhpArray{
-			php_serialize.PhpValue("201504171010-filename.dat"): php_serialize.PhpValue("filename"),
-		},
-	})
+import "github.com/davecgh/go-spew/spew"
+import "github.com/yvasiyarov/php_session_decoder/php_serialize"
+
+func Test_Parse_to_Page(t *testing.T) {
+	actual, err := ParsePage(`a:3:{s:5:"total";i:98;s:7:"perpage";i:5;s:7:"entries";a:5:{s:25:"20131125000000-zurich.dat";s:6:"zurich";s:34:"20120925000000-frankreich-2012.dat";s:15:"frankreich-2012";s:29:"20120528000000-birkweiler.dat";s:10:"birkweiler";s:34:"20111003155912-fallout-shelter.dat";s:15:"fallout-shelter";s:37:"20110820123913-dresden-2011-08-20.dat";s:18:"dresden-2011-08-20";}}`)
 
 	if err != nil {
 		t.Fail()
 	}
 
-	assertDeepEqual(Page{
-		Total:   int64(15),
+	entries := make([]EntryRef, 0, 8)
+	entries = append(entries,
+		NewEntryRef("20131125000000-zurich.dat", "zurich"),
+		NewEntryRef("20120925000000-frankreich-2012.dat", "frankreich-2012"),
+		NewEntryRef("20120528000000-birkweiler.dat", "birkweiler"),
+		NewEntryRef("20111003155912-fallout-shelter.dat", "fallout-shelter"),
+		NewEntryRef("20110820123913-dresden-2011-08-20.dat", "dresden-2011-08-20"),
+	)
+	expected := Page{
+		Total:   int64(98),
 		Perpage: int64(5),
-		Entries: []EntryRef{
-			NewEntryRef("201504171010-filename.dat", "filename"),
-		},
-	}, p, t)
+		Entries: entries,
+	}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Error("Actual value did not meet expected", spew.Sdump(actual), spew.Sdump(expected))
+	}
 }
 
-func assertDeepEqual(expect, given interface{}, t *testing.T) {
-	if !reflect.DeepEqual(expect, given) {
-		t.Errorf("Actual does not match expected.\n%s\n\n%s\n", spew.Sdump(expect), spew.Sdump(given))
+func ParsePage(in string) (Page, error) {
+	data, err := php_serialize.UnSerialize(in)
+	if err != nil {
+		return Page{}, err
 	}
+
+	return NewPage(data.(php_serialize.PhpArray))
 }
