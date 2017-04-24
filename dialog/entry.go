@@ -39,15 +39,26 @@ func (e *Entry) GetName() string {
 func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 	switch in.GetClassName() {
 	case "Album", "de.thekid.dialog.Album":
-		_, _ = newObject(Album{}, in)
-		return nil, nil
-		// return newAlbum(in)
+		album, err := newObject(Album{}, in)
+		if err != nil {
+			return nil, err
+		}
+
+		return album.(Album), nil
 
 	case "EntryCollection", "de.thekid.dialog.EntryCollection":
-		return newEntryCollection(in)
+		collection, err := newObject(EntryCollection{}, in)
+		if err != nil {
+			return nil, err
+		}
+		return collection.(EntryCollection), nil
 
 	case "SingleShot", "de.thekid.dialog.SingleShot":
-		return newSingleShot(in)
+		shot, err := newObject(SingleShot{}, in)
+		if err != nil {
+			return nil, err
+		}
+		return shot.(SingleShot), nil
 
 	default:
 		return nil, errors.New("Cannot convert class " + in.GetClassName())
