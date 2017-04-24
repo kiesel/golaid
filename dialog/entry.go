@@ -167,38 +167,3 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 	// the actual interface value
 	return out.Elem().Interface(), nil
 }
-
-func phpArrayFrom(in php_serialize.PhpValue, ok bool) *php_serialize.PhpArray {
-	if !ok {
-		return nil
-	}
-
-	out := in.(php_serialize.PhpArray)
-	return &out
-}
-
-func getFieldString(p *php_serialize.PhpObject, field string) string {
-	val, ok := p.GetPublic(field)
-	if !ok {
-		return ""
-	}
-
-	return php_serialize.PhpValueString(val)
-}
-
-func getFieldInt64(p *php_serialize.PhpObject, field string) int64 {
-	val, ok := p.GetPublic(field)
-	if !ok {
-		return 0
-	}
-
-	return php_serialize.PhpValueInt64(val)
-}
-
-func orNil(in interface{}, ok bool) interface{} {
-	if !ok {
-		return nil
-	}
-
-	return in
-}

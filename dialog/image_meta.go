@@ -1,10 +1,6 @@
 package dialog
 
-import (
-	"time"
-
-	"github.com/yvasiyarov/php_session_decoder/php_serialize"
-)
+import "time"
 
 // ExifData represents exif data
 type ExifData struct {
@@ -26,13 +22,4 @@ type ExifData struct {
 
 // IptcData represents iptc data
 type IptcData struct {
-}
-
-func newExifData(in *php_serialize.PhpObject) (ExifData, error) {
-	out, err := newObject(&ExifData{}, in)
-	if err != nil {
-		return ExifData{}, err
-	}
-
-	return out.(ExifData), nil
 }
