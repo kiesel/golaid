@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/juju/loggo"
 	"github.com/yvasiyarov/php_session_decoder/php_serialize"
 )
 
@@ -13,6 +14,8 @@ const (
 	// PhpDateStringFormat is the default date parsing format for XP Framework date objects
 	PhpDateStringFormat = "2006-01-02 15:04:05-0700"
 )
+
+var logger = loggo.GetLogger("dialog.Entry")
 
 // Entry represents a base entry
 type Entry struct {
@@ -66,8 +69,8 @@ func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 }
 
 func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, error) {
-	// fmt.Printf("Entering with %T \n", orig)
-	// defer fmt.Println("Leaving newObject")
+	logger.Debugf("Entering newObject() with a %T", orig)
+	defer logger.Debugf("Leaving newObject()")
 
 	// orig contains the struct to be filled; but it is a value, not a pointer, so we cannot change it
 	// through reflection. Instead, create a copy
@@ -137,7 +140,19 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 			// it through a pointer)
 			assignTo := out.Elem().FieldByIndex(field.Index)
 
+			logger.Debugf("Current field [%s] is a %s backed by %s",
+				field.Name,
+				field.Type.String(),
+				field.Type.Kind().String(),
+			)
+
 			switch field.Type.Kind() {
+			case reflect.Slice:
+				switch field.Type {
+				case reflect.TypeOf([]Image{}):
+					logger.Debugf("Seeing a []Image...")
+					break
+				}
 			case reflect.TypeOf(time.Time{}).Kind():
 				dateString, ok := value.(*php_serialize.PhpObject).GetPublic("value")
 				if !ok {

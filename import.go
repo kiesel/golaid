@@ -7,20 +7,25 @@ import (
 	"os"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/juju/loggo"
 	"github.com/kiesel/golaid/dialog"
 	"github.com/yvasiyarov/php_session_decoder/php_serialize"
 )
 
 var pathPrefix = "data"
 var file string
+var logger loggo.Logger
 
 func init() {
 	flag.StringVar(&pathPrefix, "path", "data", "Path to the files")
-	flag.StringVar(&file, "file", "", "Specific file to import")
+	flag.StringVar(&file, "filename", "", "Specific file to import")
 }
 
 func main() {
 	flag.Parse()
+
+	loggo.ConfigureLoggers("<root> = DEBUG")
+	logger = loggo.GetLogger("")
 
 	spew.Config = spew.ConfigState{
 		MaxDepth: 3,
@@ -28,6 +33,7 @@ func main() {
 	}
 
 	if file != "" {
+		logger.Infof("Importing entries from '%s'", file)
 		data, err := importEntryFromFile(file)
 		if err != nil {
 			panic(err)
@@ -35,6 +41,7 @@ func main() {
 
 		spew.Dump(data)
 	} else {
+		logger.Infof("Importing default index ...")
 		pages, err := importIndex()
 		if err != nil {
 			panic(err)
@@ -50,7 +57,7 @@ func main() {
 }
 
 func importIndex() ([]dialog.Page, error) {
-	fmt.Println("Importing indices:")
+	logger.Infof("Importing indices:")
 	pages := make([]dialog.Page, 0)
 	end := false
 
