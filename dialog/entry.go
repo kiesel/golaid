@@ -2,6 +2,7 @@ package dialog
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -187,10 +188,13 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 						chapters = append(chapters, object.(Chapter))
 					}
 					assignTo.Set(reflect.ValueOf(chapters))
+
+				default:
+					return nil, fmt.Errorf("Cannot convert structure, have %v", value)
 				}
 
 			case reflect.Struct:
-				switch reflect.TypeOf(value) {
+				switch field.Type {
 				case reflect.TypeOf(time.Time{}):
 					dateString, ok := value.(*php_serialize.PhpObject).GetPublic("value")
 					if !ok {
@@ -203,6 +207,26 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 						logger.Infof("Could not parse date: %v\n", err)
 					}
 					assignTo.Set(reflect.ValueOf(time))
+
+				case reflect.TypeOf(ExifData{}):
+					data, ok := value.(*php_serialize.PhpObject)
+					if !ok {
+						logger.Infof("Could not convert exit data, have %v", value)
+						break
+					}
+
+					exif, err := newObject(ExifData{}, data)
+					if err != nil {
+						return nil, err
+					}
+					assignTo.Set(reflect.ValueOf(exif))
+
+				case reflect.TypeOf(IptcData{}):
+					// TBI
+
+				default:
+					return nil, fmt.Errorf("Cannot convert type %T into %s", value, field.Type)
+
 				}
 
 			case reflect.Int:
