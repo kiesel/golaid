@@ -2,7 +2,6 @@ package dialog
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -125,12 +124,12 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 			// Acquire value from PHP object
 			value, ok := in.GetPublic(phpFieldName)
 			if !ok {
-				fmt.Printf("Cannot set value on field %s from %s\n", field.Name, phpFieldName)
+				logger.Infof("Cannot set value on field %s from %s\n", field.Name, phpFieldName)
 				continue
 			}
 
 			if value == nil {
-				fmt.Println("Skipping setting nil value")
+				logger.Debugf("Skipping setting nil value")
 				continue
 			}
 
@@ -152,10 +151,11 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 				case reflect.TypeOf([]Image{}):
 					input := value.(php_serialize.PhpArray)
 					images := make([]Image, 0, len(input))
+
 					logger.Debugf("Creating %d elements of type %T", cap(images), images)
 					for i := 0; i < len(input); i++ {
 						if input[i] == nil {
-							logger.Debugf("Element %d was nil, skipping", i)
+							logger.Debugf("Element %d is nil, skipping", i)
 							continue
 						}
 						data := input[i].(*php_serialize.PhpObject)
@@ -167,13 +167,15 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 						images = append(images, object.(Image))
 					}
 					assignTo.Set(reflect.ValueOf(images))
+
 				case reflect.TypeOf([]Chapter{}):
 					input := value.(php_serialize.PhpArray)
 					chapters := make([]Chapter, 0, len(input))
+
 					logger.Debugf("Creating %d elements of type %T", cap(chapters), chapters)
 					for i := 0; i < len(input); i++ {
 						if input[i] == nil {
-							logger.Debugf("Element %d was nil, skipping", i)
+							logger.Debugf("Element %d is nil, skipping", i)
 							continue
 						}
 						data := input[i].(*php_serialize.PhpObject)
@@ -182,22 +184,27 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 							return nil, err
 						}
 
-						logger.Debugf("%v", object)
 						chapters = append(chapters, object.(Chapter))
 					}
 					assignTo.Set(reflect.ValueOf(chapters))
 				}
-			case reflect.TypeOf(time.Time{}).Kind():
-				dateString, ok := value.(*php_serialize.PhpObject).GetPublic("value")
-				if !ok {
-					fmt.Println("Could not get date")
-					break
+
+			case reflect.Struct:
+				switch reflect.TypeOf(value) {
+				case reflect.TypeOf(time.Time{}):
+					dateString, ok := value.(*php_serialize.PhpObject).GetPublic("value")
+					if !ok {
+						logger.Infof("Could not convert date, have %v", value)
+						break
+					}
+
+					time, err := time.Parse(PhpDateStringFormat, dateString.(string))
+					if err != nil {
+						logger.Infof("Could not parse date: %v\n", err)
+					}
+					assignTo.Set(reflect.ValueOf(time))
 				}
-				time, err := time.Parse(PhpDateStringFormat, dateString.(string))
-				if err != nil {
-					fmt.Printf("Could not parse date: %v\n", err)
-				}
-				assignTo.Set(reflect.ValueOf(time))
+
 			case reflect.Int:
 			case reflect.Int64:
 				assignTo.SetInt(php_serialize.PhpValueInt64(value))
