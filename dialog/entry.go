@@ -69,8 +69,8 @@ func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 }
 
 func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, error) {
-	logger.Debugf("Entering newObject() with a %T", orig)
-	defer logger.Debugf("Leaving newObject()")
+	logger.Debugf("Entering newObject() with a %T @ %p", orig, in)
+	defer logger.Debugf("Leaving newObject() of %T @ %p", orig, in)
 
 	// orig contains the struct to be filled; but it is a value, not a pointer, so we cannot change it
 	// through reflection. Instead, create a copy
@@ -150,8 +150,42 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 			case reflect.Slice:
 				switch field.Type {
 				case reflect.TypeOf([]Image{}):
-					logger.Debugf("Seeing a []Image...")
-					break
+					input := value.(php_serialize.PhpArray)
+					images := make([]Image, 0, len(input))
+					logger.Debugf("Creating %d elements of type %T", cap(images), images)
+					for i := 0; i < len(input); i++ {
+						if input[i] == nil {
+							logger.Debugf("Element %d was nil, skipping", i)
+							continue
+						}
+						data := input[i].(*php_serialize.PhpObject)
+						object, err := newObject(Image{}, data)
+						if err != nil {
+							return nil, err
+						}
+
+						images = append(images, object.(Image))
+					}
+					assignTo.Set(reflect.ValueOf(images))
+				case reflect.TypeOf([]Chapter{}):
+					input := value.(php_serialize.PhpArray)
+					chapters := make([]Chapter, 0, len(input))
+					logger.Debugf("Creating %d elements of type %T", cap(chapters), chapters)
+					for i := 0; i < len(input); i++ {
+						if input[i] == nil {
+							logger.Debugf("Element %d was nil, skipping", i)
+							continue
+						}
+						data := input[i].(*php_serialize.PhpObject)
+						object, err := newObject(Chapter{}, data)
+						if err != nil {
+							return nil, err
+						}
+
+						logger.Debugf("%v", object)
+						chapters = append(chapters, object.(Chapter))
+					}
+					assignTo.Set(reflect.ValueOf(chapters))
 				}
 			case reflect.TypeOf(time.Time{}).Kind():
 				dateString, ok := value.(*php_serialize.PhpObject).GetPublic("value")
