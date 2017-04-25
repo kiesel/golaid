@@ -63,7 +63,7 @@ func importIndex() ([]dialog.Page, error) {
 
 	for i := 0; !end; i++ {
 		fname := fmt.Sprintf("%s/page_%d.idx", pathPrefix, i)
-		fmt.Printf("Importing %s\n", fname)
+		logger.Infof("Importing %s\n", fname)
 		data, err := importFile(fname)
 
 		if err != nil {
@@ -121,7 +121,7 @@ func importEntries(pages []dialog.Page) ([]dialog.IEntry, error) {
 
 func importEntry(er dialog.EntryRef) (dialog.IEntry, error) {
 	fname := fmt.Sprintf("%s/%s", pathPrefix, er.Filename)
-	fmt.Printf("Importing entry '%s'\n", fname)
+	logger.Infof("Importing entry '%s'\n", fname)
 
 	return importEntryFromFile(fname)
 }

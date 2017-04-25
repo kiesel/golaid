@@ -41,7 +41,7 @@ func (e *Entry) GetName() string {
 // NewEntry constructs a new dialog entry structure
 func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 	switch in.GetClassName() {
-	case "Album", "de.thekid.dialog.Album":
+	case "Album":
 		album, err := newObject(Album{}, in)
 		if err != nil {
 			return nil, err
@@ -49,14 +49,14 @@ func NewEntry(in *php_serialize.PhpObject) (IEntry, error) {
 
 		return album.(Album), nil
 
-	case "EntryCollection", "de.thekid.dialog.EntryCollection":
+	case "EntryCollection":
 		collection, err := newObject(EntryCollection{}, in)
 		if err != nil {
 			return nil, err
 		}
 		return collection.(EntryCollection), nil
 
-	case "SingleShot", "de.thekid.dialog.SingleShot":
+	case "SingleShot":
 		shot, err := newObject(SingleShot{}, in)
 		if err != nil {
 			return nil, err

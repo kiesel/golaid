@@ -6,5 +6,5 @@ type Image struct {
 	Width    int64    `php:"width"`
 	Height   int64    `php:"height"`
 	ExifData ExifData `php:"exifData"`
-	IptcData IptcData `php:"iptcData"`
+	// IptcData IptcData `php:"iptcData"`
 }

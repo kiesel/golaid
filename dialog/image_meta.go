@@ -14,7 +14,7 @@ type ExifData struct {
 	DateTime        time.Time `php:"dateTime"`
 	Model           string    `php:"model"`
 	MimeType        string    `php:"mimeType"`
-	WhiteBalance    int       `php:"whiteBalance"`
+	WhiteBalance    int       `php:"whitebalance"`
 	FocalLength     int       `php:"focalLength"`
 	Make            string    `php:"make"`
 	ExposureProgram int       `php:"exposureProgram"`
@@ -22,4 +22,23 @@ type ExifData struct {
 
 // IptcData represents iptc data
 type IptcData struct {
+	// 	Title                         string    `php:"-"`
+	// 	Urgency                       string    `php:"-"`
+	// 	Category                      string    `php:"-"`
+	// 	Keywords                      []string  `php:"-"`
+	// 	DateCreated                   time.Time `php:"-"`
+	// 	Author                        string    `php:"-"`
+	// 	AuthorPosition                string    `php:"-"`
+	// 	City                          string    `php:"-"`
+	// 	State                         string    `php:"-"`
+	// 	Country                       string    `php:"-"`
+	// 	Headline                      string    `php:"-"`
+	// 	Credit                        string    `php:"-"`
+	// 	Source                        string    `php:"-"`
+	// 	CopyrightNotice               string    `php:"-"`
+	// 	Caption                       string    `php:"-"`
+	// 	Writer                        string    `php:"-"`
+	// 	SpecialInstruction            string    `php:"-"`
+	// 	SupplementalCategories        string    `php:"-"`
+	// 	OriginalTransmissionReference string    `php:"-"`
 }
