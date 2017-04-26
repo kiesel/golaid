@@ -83,9 +83,13 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		// fmt.Printf("Inspecting type %v\n", field)
 
 		if field.Anonymous {
+
+			// A bit inelegantly at this point, but unable to finally create
+			// the *Entry object through reflection, falling back to doing things
+			// manually. It is easy, though, because Entry{} is the only embedded
+			// struct at this time.
 			if field.Type == reflect.TypeOf(&Entry{}) {
 
 				// Create new object; static type is interface{}
@@ -102,25 +106,14 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 				continue
 			}
 		}
-		// if _, ok := field.Tag.Lookup("recurse"); ok {
 
-		// 	// Create a new instance of orig's underlying type
-		// 	// spew.Dump(field.Type)
-		// 	entry := reflect.New(reflect.TypeOf(orig))
-		// 	// spew.Dump(entry.Elem().Interface())
-
-		// 	entryRef, err := newObject(entry.Elem(), in)
-		// 	// spew.Dump(entryRef)
-
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-
-		// 	// out.Elem().FieldByIndex(field.Index).Set(reflect.ValueOf(entryRef))
-		// 	continue
-		// }
-
+		// Look at `php:""` tag to see if the field is relevant:
 		if phpFieldName, ok := field.Tag.Lookup("php"); ok {
+			logger.Debugf("Current field [%s] is a %s backed by %s",
+				field.Name,
+				field.Type.String(),
+				field.Type.Kind().String(),
+			)
 
 			// Acquire value from PHP object
 			value, ok := in.GetPublic(phpFieldName)
@@ -140,20 +133,14 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 			// it through a pointer)
 			assignTo := out.Elem().FieldByIndex(field.Index)
 
-			logger.Debugf("Current field [%s] is a %s backed by %s",
-				field.Name,
-				field.Type.String(),
-				field.Type.Kind().String(),
-			)
-
 			switch field.Type.Kind() {
 			case reflect.Slice:
 				switch field.Type {
 				case reflect.TypeOf([]Image{}):
 					input := value.(php_serialize.PhpArray)
-					images := make([]Image, 0, len(input))
+					elements := make([]Image, 0, len(input))
 
-					logger.Debugf("Creating %d elements of type %T", cap(images), images)
+					logger.Debugf("Creating %d elements of type %T", cap(elements), elements)
 					for i := 0; i < len(input); i++ {
 						if input[i] == nil {
 							logger.Debugf("Element %d is nil, skipping", i)
@@ -165,15 +152,35 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 							return nil, err
 						}
 
-						images = append(images, object.(Image))
+						elements = append(elements, object.(Image))
 					}
-					assignTo.Set(reflect.ValueOf(images))
+					assignTo.Set(reflect.ValueOf(elements))
+
+				case reflect.TypeOf([]IEntry{}):
+					input := value.(php_serialize.PhpArray)
+					elements := make([]IEntry, 0, len(input))
+
+					logger.Debugf("Creating %d elements of type %T", cap(elements), elements)
+					for i := 0; i < len(input); i++ {
+						if input[i] == nil {
+							logger.Debugf("Element %d is nil, skipping", i)
+							continue
+						}
+						data := input[i].(*php_serialize.PhpObject)
+						element, err := NewEntry(data)
+						if err != nil {
+							return nil, err
+						}
+
+						elements = append(elements, element)
+					}
+					assignTo.Set(reflect.ValueOf(elements))
 
 				case reflect.TypeOf([]Chapter{}):
 					input := value.(php_serialize.PhpArray)
-					chapters := make([]Chapter, 0, len(input))
+					elements := make([]Chapter, 0, len(input))
 
-					logger.Debugf("Creating %d elements of type %T", cap(chapters), chapters)
+					logger.Debugf("Creating %d elements of type %T", cap(elements), elements)
 					for i := 0; i < len(input); i++ {
 						if input[i] == nil {
 							logger.Debugf("Element %d is nil, skipping", i)
@@ -185,9 +192,9 @@ func newObject(orig interface{}, in *php_serialize.PhpObject) (interface{}, erro
 							return nil, err
 						}
 
-						chapters = append(chapters, object.(Chapter))
+						elements = append(elements, object.(Chapter))
 					}
-					assignTo.Set(reflect.ValueOf(chapters))
+					assignTo.Set(reflect.ValueOf(elements))
 
 				default:
 					return nil, fmt.Errorf("Cannot convert structure, have %v", value)
